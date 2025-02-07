@@ -1,0 +1,18 @@
+# Multidimensional Regression on LHC collision jets Submission
+
+You can find a template notebook in `submission/solution.ipynb`.
+Fill in your solution. You can run the notebook locally to test your
+solution by running the following in the terminal
+
+```bash
+aqora test
+```
+
+And when you are ready to submit run
+
+```bash
+aqora upload
+```
+
+## Extra Notebook 
+- **[q3as_demo.ipynb](./template/submission/q3as_demo.ipynb)** : This is an additional notebook provided as an q3as usage example.

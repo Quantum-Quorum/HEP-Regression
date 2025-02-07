@@ -1,0 +1,30 @@
+[project]
+name = "submission"
+version = "0.1.0"
+requires-python = ">=3.8"
+
+# You can add dependencies with `aqora add`
+dependencies = [
+  "q3as>=0.1.3",
+  "python-dotenv>=1.0.1",
+]
+
+[build-system]
+requires = [
+  "uv>=0.4.20",
+  "setuptools>=75",
+  "wheel>=0.44",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+[tool.setuptools.package-data]
+submission = ["*"]
+
+[tool.aqora]
+type = "submission"
+competition = "cern-2025-challenge-2"
+
+[tool.aqora.refs]
+solution = { path = "submission.solution", notebook = true }
