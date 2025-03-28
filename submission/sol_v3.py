@@ -527,11 +527,8 @@ def evaluate_kl_divergence(y_true_orig, y_pred_orig, n_bins=50, pt_range=(0, 200
     print("\n--- Evaluating KL Divergence ---")
     kl_scores = {}
 
-    # Assumes y_true_orig and y_pred_orig are NUMPY ARRAYS with shape (N_events, 3)
     # Columns: 0=n_jets, 1=leading_pt, 2=subleading_pt
-    # IMPORTANT: Use ORIGINAL scale, not scaled data!
 
-    # 1. Jet Multiplicity (n_jets)
     true_njets = y_true_orig[:, 0].astype(int)
     pred_njets = np.round(y_pred_orig[:, 0]).astype(int)  # Round predictions
     pred_njets[pred_njets < 0] = 0  # Ensure non-negative
@@ -544,10 +541,8 @@ def evaluate_kl_divergence(y_true_orig, y_pred_orig, n_bins=50, pt_range=(0, 200
     kl_scores['n_jets'] = kl_njets
     print(f"KL Divergence (n_jets): {kl_njets:.4f}")
 
-    # 2. Leading Jet Pt
     true_lpt = y_true_orig[:, 1]
     pred_lpt = y_pred_orig[:, 1]
-    # Exclude events where true leading pt is 0 (e.g., 0 jets)
     valid_lpt_mask = true_lpt > 1e-6
 
     true_lpt_hist, _ = np.histogram(true_lpt[valid_lpt_mask], bins=n_bins, range=pt_range)
@@ -557,10 +552,8 @@ def evaluate_kl_divergence(y_true_orig, y_pred_orig, n_bins=50, pt_range=(0, 200
     kl_scores['leading_pt'] = kl_lpt
     print(f"KL Divergence (leading_pt): {kl_lpt:.4f}")
 
-    # 3. Subleading Jet Pt
     true_slpt = y_true_orig[:, 2]
     pred_slpt = y_pred_orig[:, 2]
-    # Exclude events where true subleading pt is 0 (e.g., < 2 jets)
     valid_slpt_mask = true_slpt > 1e-6
 
     true_slpt_hist, _ = np.histogram(true_slpt[valid_slpt_mask], bins=n_bins, range=pt_range)
@@ -570,7 +563,6 @@ def evaluate_kl_divergence(y_true_orig, y_pred_orig, n_bins=50, pt_range=(0, 200
     kl_scores['subleading_pt'] = kl_slpt
     print(f"KL Divergence (subleading_pt): {kl_slpt:.4f}")
 
-    # Combine KL scores (Example: simple average, weighting TBD by hackathon)
     final_score = np.mean(list(kl_scores.values()))
     print(f"Average KL Divergence Score: {final_score:.4f}")
 
@@ -620,7 +612,7 @@ if __name__ == "__main__":
             f"\nUsing {len(feature_columns)} Feature Columns: {feature_columns[:5]}...{feature_columns[-5:]}")
         print(f"Using {len(target_columns)} Target Columns: {target_columns}")
 
-        sample_size = 10000
+        sample_size = 5000
 
         if sample_size < len(feature_target_df):
             print(f"\nSampling {sample_size} events for faster execution...")
@@ -677,7 +669,7 @@ if __name__ == "__main__":
                 kl_scores_q, final_kl_q = evaluate_kl_divergence(y_test_orig, y_pred_quantum_orig)
             print("\n--- Generating Submission File (Example using Tuned RF) ---")
             # 1. Load TEST parton data (replace with actual test file name)
-            test_data_fp = os.path.join(data_path, 'TEST_DATA_FILE.h5')  # NEEDS ACTUAL FILENAME
+            test_data_fp = os.path.join(data_path, 'pp-z-to-jets-500K-54167.h5')
             submission_df = None
             if os.path.exists(test_data_fp):
                 try:
