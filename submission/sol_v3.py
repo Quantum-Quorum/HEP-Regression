@@ -581,12 +581,11 @@ def evaluate_kl_divergence(y_true_orig, y_pred_orig, n_bins=50, pt_range=(0, 200
 if __name__ == "__main__":
     main_start_time = time.time()
 
-    # Setup Paths
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
     except NameError:
-        script_dir = os.getcwd()  # Fallback if __file__ not defined (e.g. interactive)
-    repo_root = os.path.abspath(os.path.join(script_dir, '..'))  # Assumes script is in 'submission' or similar subdir
+        script_dir = os.getcwd()
+    repo_root = os.path.abspath(os.path.join(script_dir, '..'))
     data_path = os.path.join(repo_root, 'data')
     output_path = os.path.join(repo_root, 'outputs')
     os.makedirs(output_path, exist_ok=True)
@@ -594,8 +593,6 @@ if __name__ == "__main__":
     print(f"Data directory: {data_path}")
     print(f"Output directory: {output_path}")
 
-    # Specify Training File
-    # Make sure this file contains both 'partons' and 'jets'
     training_data_fp = os.path.join(data_path, 'pp-z-to-jets-500K-57246.h5')
     if not os.path.exists(training_data_fp):
         print(f"FATAL ERROR: Training data file not found at {training_data_fp}")
@@ -608,12 +605,10 @@ if __name__ == "__main__":
         print(f"\nSuccessfully processed and merged data. Shape: {feature_target_df.shape}")
         # print(f"Columns: {feature_target_df.columns.tolist()}") # Optional: Print all columns
 
-        # Define Features (X) and Targets (y)
         feature_columns = [col for col in feature_target_df.columns if
                            col.startswith('p0_') or col.startswith('p1_') or col.startswith('parton_')]
         target_columns = ['n_jets', 'leading_pt', 'subleading_pt']
 
-        # Check if columns were created correctly
         if not all(col in feature_target_df.columns for col in feature_columns + target_columns):
             print("FATAL ERROR: Not all expected feature/target columns found in DataFrame after processing.")
             print("Features expected (start with): p0_, p1_, parton_")
@@ -622,14 +617,10 @@ if __name__ == "__main__":
             exit()
 
         print(
-            f"\nUsing {len(feature_columns)} Feature Columns: {feature_columns[:5]}...{feature_columns[-5:]}")  # Print first/last 5
+            f"\nUsing {len(feature_columns)} Feature Columns: {feature_columns[:5]}...{feature_columns[-5:]}")
         print(f"Using {len(target_columns)} Target Columns: {target_columns}")
 
-        # --- Sample Data ---
-        # Start small for quantum testing! 1000 samples, ~12 features -> ~12 qubits (borderline)
-        # sample_size = 500 # Even smaller for initial QK-SVR test
-        sample_size = 2000  # Try slightly larger for RF baseline
-        # sample_size = len(feature_target_df) # Use full dataset for final run (might be slow)
+        sample_size = 10000
 
         if sample_size < len(feature_target_df):
             print(f"\nSampling {sample_size} events for faster execution...")
@@ -653,15 +644,13 @@ if __name__ == "__main__":
             print(f"Parton feature dimension: {feature_dimension}")
 
             # --- Run Classical Models ---
-            # This function now includes tuning and returns the best model
             best_rf_model, y_pred_rf_tuned_scaled = main_regression_classical(
                 X_train, X_test, y_train, y_test
             )
 
             # --- Run Quantum Model ---
-            y_pred_quantum_scaled = None  # Initialize
-            use_amplitude = False  # Angle embedding usually more feasible
-            # Limit qubits strictly for QK-SVR feasibility
+            y_pred_quantum_scaled = None
+            use_amplitude = False
             max_allowed_qubits = 12
             required_qubits = int(np.ceil(np.log2(feature_dimension))) if use_amplitude else feature_dimension
 
@@ -675,8 +664,6 @@ if __name__ == "__main__":
                 print(f"\n--- Skipping Quantum Kernel Regression ---")
                 print(f"Required qubits ({required_qubits}) exceeds allowed limit ({max_allowed_qubits}).")
 
-            # --- Evaluate KL Divergence on Test Set ---
-            # Inverse transform predictions and true values to original scale
             print("\n--- Inverse Transforming Data for KL Evaluation ---")
             y_test_orig = scaler_y.inverse_transform(y_test)
             y_pred_rf_tuned_orig = scaler_y.inverse_transform(y_pred_rf_tuned_scaled)
@@ -688,10 +675,6 @@ if __name__ == "__main__":
                 y_pred_quantum_orig = scaler_y.inverse_transform(y_pred_quantum_scaled)
                 print("\nEvaluating Quantum Kernel SVR:")
                 kl_scores_q, final_kl_q = evaluate_kl_divergence(y_test_orig, y_pred_quantum_orig)
-
-            # --- Final Prediction & Submission File ---
-            # Choose the best model based on KL divergence (or R2/MSE during dev)
-            # Example: Use the tuned RF model for submission
             print("\n--- Generating Submission File (Example using Tuned RF) ---")
             # 1. Load TEST parton data (replace with actual test file name)
             test_data_fp = os.path.join(data_path, 'TEST_DATA_FILE.h5')  # NEEDS ACTUAL FILENAME
