@@ -668,12 +668,12 @@ if __name__ == "__main__":
                 print("\nEvaluating Quantum Kernel SVR:")
                 kl_scores_q, final_kl_q = evaluate_kl_divergence(y_test_orig, y_pred_quantum_orig)
             print("\n--- Generating Submission File (Example using Tuned RF) ---")
-            # 1. Load TEST parton data (replace with actual test file name)
             test_data_fp = os.path.join(data_path, 'pp-z-to-jets-500K-54167.h5')
             submission_df = None
             if os.path.exists(test_data_fp):
                 try:
                     with h5py.File(test_data_fp, 'r') as f_test:
+                        print(f_test.keys())
                         if 'partons' in f_test:
                             partons_test_data = f_test['partons'][:]
                             print(f"Loaded test parton data. Shape: {partons_test_data.shape}")
@@ -684,16 +684,19 @@ if __name__ == "__main__":
                                                                columns=test_column_names)
 
                             test_features_df = extract_parton_features(partons_test_raw_df)
+                            print(test_features_df.columns)
                             test_features_df = test_features_df.reindex(columns=feature_columns,
-                                                                        fill_value=0)  # Reorder/add missing cols
-
+                                                                        fill_value=0)
+                            print("print after reindex")
+                            print(test_features_df.columns)
+                            test_features_df['event_id'] = test_features_df.index
                             X_test_final_raw = test_features_df[feature_columns].values
                             if np.any(~np.isfinite(X_test_final_raw)):
                                 print(
                                     "Warning: Non-finite values found in test feature data before scaling. Replacing with 0.")
                                 X_test_final_raw = np.nan_to_num(X_test_final_raw, nan=0.0, posinf=0.0, neginf=0.0)
                             X_test_final_scaled = scaler_x.transform(
-                                X_test_final_raw)  # Use transform, not fit_transform!
+                                X_test_final_raw)
 
                             print(f"Predicting on {len(X_test_final_scaled)} test samples...")
                             y_pred_final_scaled = best_rf_model.predict(X_test_final_scaled)
