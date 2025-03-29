@@ -578,6 +578,7 @@ if __name__ == "__main__":
     except NameError:
         script_dir = os.getcwd()
     repo_root = os.path.abspath(os.path.join(script_dir, '..'))
+    print(repo_root)
     data_path = os.path.join(repo_root, 'data')
     output_path = os.path.join(repo_root, 'outputs')
     os.makedirs(output_path, exist_ok=True)
